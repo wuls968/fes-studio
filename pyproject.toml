@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fes-studio"
+version = "0.1.0"
+description = "Post-processing and publication-grade visualization for enhanced-sampling free energy surfaces."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "scipy",
+  "seaborn",
+  "scikit-image",
+  "plotly",
+  "streamlit",
+  "networkx",
+  "openpyxl",
+]
+
+[project.scripts]
+fes-studio-launch = "fes_studio.launcher:launch_entrypoint"
+fes-studio-repair = "fes_studio.launcher:repair_entrypoint"
+fes-studio-cli = "fes_studio.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

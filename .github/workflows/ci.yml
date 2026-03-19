@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  smoke:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+            run_2d: true
+          - os: macos-latest
+            python-version: "3.11"
+            run_2d: false
+          - os: windows-latest
+            python-version: "3.11"
+            run_2d: false
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Compile Python sources
+        run: python -m compileall src app.py
+
+      - name: Runtime preflight
+        run: python -m fes_studio.launcher preflight
+
+      - name: Demo asset smoke test
+        run: python -m fes_studio.cli demo
+
+      - name: 1D analysis smoke test
+        run: python -m fes_studio.cli analyze examples/demo_1d_fes.dat --output-dir ci_exports_1d --language en --mfep-publication-mode
+
+      - name: 2D analysis smoke test
+        if: matrix.run_2d
+        run: python -m fes_studio.cli analyze examples/demo_2d_fes.dat --output-dir ci_exports_2d --language en --palette viridis --mfep-publication-mode --annotate-barrier-table
+
+      - name: Upload smoke-test bundles
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-${{ matrix.os }}
+          path: |
+            ci_exports_1d
+            ci_exports_2d
+          if-no-files-found: ignore
